@@ -7,7 +7,7 @@ window.title(__file__) # use this script file name as title
 width, height = "400", "50" # define window size in pixels
 window.geometry(width + "x" + height) # set window size
 
-""" prepare a GUI Lable widget """
+""" prepare a GUI Label widget """
 label_welcome = tk.Label(window, text="Hello GUI World!") # define label
 label_welcome.grid() # apply label with grid method
 
