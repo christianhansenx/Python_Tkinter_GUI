@@ -3,7 +3,7 @@ import tkinter as tk # import all tkinter functions
 
 """ prepare application window """
 window = tk.Tk() # create main window of application
-window.title("Tkinter GUI - Hello World") # use this script file name as title
+window.title("Tkinter Hello World") # define Window title
 width, height = "400", "50" # define window size in pixels
 window.geometry(width + "x" + height) # set window size
 
