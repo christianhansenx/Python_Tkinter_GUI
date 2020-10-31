@@ -24,9 +24,9 @@ root.title('Roll Dice')
 label = tk.Label(root, text='', font=('Helvetica', 260))
 
 def roll_dice():
-    dice = ['\u2680', '\u2681', '\u2682', '\u2683', '\u2684', '\u2685', '\u1F0A6'] # https://www.htmlsymbols.xyz/games-symbols/dice
+    dice = ['\u2680', '\u2681', '\u2682', '\u2683', '\u2684', '\u2685', '\u27a4'] # https://www.htmlsymbols.xyz/games-symbols/dice
 #    label.configure(text=f'{random.choice(dice)} {random.choice(dice)}')
-    label.configure(text=dice[6])
+    label.configure(text=dice[5])
     label.pack()
 
 roll_dice()
