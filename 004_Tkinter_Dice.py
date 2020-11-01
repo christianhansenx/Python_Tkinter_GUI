@@ -35,7 +35,7 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
         self.statistics_frame()
         self.statistics_reset()
         self.statistics_update(5, "8", "55.8")
-        self.columnconfigure(0, weight=1)
+#        self.columnconfigure(0, weight=1)
         self.title("Dice Rolling Simulator")
         self.resizable(width=False, height=False)
         self.mainloop()
@@ -56,6 +56,15 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
             dice_value_text += self.DICE_SYMBOLS[dice_value-1]
         self.stringvar_dice.set(dice_value_text)
 
+    def statistics_frame(self, title="Statistics"):
+        statistics_frame = tk.LabelFrame(self, text=" " + title + " ", font=self.frame_font, labelanchor="n")
+        statistics_frame.grid(padx=self.PADDING_DEFAULT, pady=(0, self.PADDING_DEFAULT))
+        self.statistics_rolling_info(statistics_frame)
+        table_frame = tk.Frame(statistics_frame)
+        table_frame.grid(padx=self.PADDING_DEFAULT * 2, pady=(self.PADDING_DEFAULT, self.PADDING_DEFAULT * 2))
+        self.statistics_table(table_frame)
+#        statistics_frame.columnconfigure(0, weight=1)
+
     def statistics_table(self, frame):
         self.stat_labels = {}
         self.stat_stringvars = {}
@@ -72,10 +81,10 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
                     if column == 0:
                         label["text"] = row_header
                         alignment = "W"
-                        if row > 0: # new statistics row for containing values
+                        if row > 0: # new statistics row containing values
                             self.stat_labels[row_header] = []
                             self.stat_stringvars[row_header] = []
-                    else:
+                    else: # row 0
                         label["text"] = str(column)
                         label["width"] = self.STATISTICS_COLUMN_WIDTH
                         alignment = "EW"
@@ -88,14 +97,10 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
                 label.grid(column=column, row=row, sticky=alignment)
                 cell.columnconfigure(0, weight=1)
 
-    def statistics_frame(self, title="Statistics"):
-        statistics_frame = tk.LabelFrame(self, text=" "+title+" ", font=self.frame_font, labelanchor="n")
-        statistics_frame.grid(padx=self.PADDING_DEFAULT, pady=(0, self.PADDING_DEFAULT))
-
-        # Rolling counts frame
+    def statistics_rolling_info(self, frame):
         self.stringvar_rolling_counts = tk.StringVar()
         self.stringvar_rolling_counts.set("0")
-        roll_count_frame = tk.Frame(statistics_frame)
+        roll_count_frame = tk.Frame(frame)
         roll_count_frame.grid(padx=self.PADDING_DEFAULT*2, pady=self.PADDING_DEFAULT, sticky="EW")
         cell = tk.Frame(roll_count_frame, relief=tk.RIDGE, borderwidth=1)
         cell.grid()
@@ -108,11 +113,6 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
         label["bg"] = self.STATISTICS_ACTIVE_BG
         label.grid(ipadx=int(self.DEFAULT_FONT_SIZE/3), sticky="E") # ipadx to create a little space in front of value
 
-        table_frame = tk.Frame(statistics_frame)
-        table_frame.grid(padx=self.PADDING_DEFAULT*2, pady=(self.PADDING_DEFAULT, self.PADDING_DEFAULT*2))
-        self.statistics_table(table_frame)
-        statistics_frame.columnconfigure(0, weight=1)
-
     def statistics_reset(self):
         first_active_column = self.dice_amount - 1
         last_active_column = self.dice_amount * 6 - 1
@@ -122,13 +122,12 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
             for column in range(0, 6 * DICE_AMOUNT_MAX):
                 label = label_list[column]
                 stringvar_list[column].set("")
-                cell = label.master
                 if column < first_active_column or column > last_active_column:
                     label["bg"] = self.STATISTICS_INACTIVE_BG
-                    cell["bg"] = self.STATISTICS_INACTIVE_BG
+                    label.master["bg"] = self.STATISTICS_INACTIVE_BG
                 else:
                     label["bg"] = self.STATISTICS_ACTIVE_BG
-                    cell["bg"] = self.STATISTICS_ACTIVE_BG
+                    label.master["bg"] = self.STATISTICS_ACTIVE_BG
 
     def statistics_update(self, dice_sum, counts, distribution):
         stringvar_list = self.stat_stringvars["Result Counts"]
