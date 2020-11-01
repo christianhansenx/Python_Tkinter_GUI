@@ -40,8 +40,8 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
         self.resizable(width=False, height=False)
         self.mainloop()
 
-    def dice_frame(self):
-        frame = tk.LabelFrame(self, text=" Latest Dice Roll ", font=self.frame_font, labelanchor="n")
+    def dice_frame(self, title="Latest Dice Roll"):
+        frame = tk.LabelFrame(self, text=" "+title+" ", font=self.frame_font, labelanchor="n")
         frame.grid(padx=self.PADDING_DEFAULT, pady=self.PADDING_DEFAULT, sticky="EW")
         stringvar = tk.StringVar()
         font = tkfont.Font(size=self.DICE_FONT_SIZE)
@@ -88,8 +88,8 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
                 label.grid(column=column, row=row, sticky=alignment)
                 cell.columnconfigure(0, weight=1)
 
-    def statistics_frame(self):
-        statistics_frame = tk.LabelFrame(self, text=" Statistics ", font=self.frame_font, labelanchor="n")
+    def statistics_frame(self, title="Statistics"):
+        statistics_frame = tk.LabelFrame(self, text=" "+title+" ", font=self.frame_font, labelanchor="n")
         statistics_frame.grid(padx=self.PADDING_DEFAULT, pady=(0, self.PADDING_DEFAULT))
 
         # Rolling counts frame
