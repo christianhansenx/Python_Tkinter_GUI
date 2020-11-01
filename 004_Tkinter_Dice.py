@@ -14,7 +14,7 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
 
     PADDING_DEFAULT = 8
     DEFAULT_FONT_SIZE = 10
-    FONT_FRAME_FACTOR = 1.25
+    FONT_FRAME_FACTOR = 1.4
     DICE_FONT_SIZE = 128
     STATISTICS_COLUMN_WIDTH = 4
     STATISTICS_HEADER_BG = "light yellow"
