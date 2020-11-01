@@ -1,35 +1,79 @@
 """ import module functions (Python 3.xx) """
 import random
 import tkinter as tk # import all tkinter functions
+import tkinter.font as tkfont
 
-'''
-""" prepare application window """
-window = tk.Tk() # create main window of application
-window.title("Tkinter Hello World") # define Window title
-width, height = "400", "50" # define window size in pixels
-window.geometry(width + "x" + height) # set window size
+STATISTICS_HEADERS = ["Dice Sum", "Result Counts", "Distribution [%]"]
+DICE_AMOUNT_MAX = 4
 
-""" prepare a GUI Label widget """
-label_welcome = tk.Label(window, text="Hello GUI World!") # define label
-label_welcome.grid() # apply label with grid method
+class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in this class
 
-""" execute GUI application """
-window.mainloop() # launch GUI and run until user closes the window
-'''
+    # html symbols of dice 1 to 6 eyes (https://www.htmlsymbols.xyz/games-symbols/dice)
+    DICE_SYMBOLS = ["\u2680", "\u2681", "\u2682", "\u2683", "\u2684", "\u2685"]
 
-root = tk.Tk()
-root.geometry('600x600')
-root.title('Roll Dice')
+    FRAME_PADDING = 4
+    DEFAULT_FONT_SIZE = 10
+    DICE_FONT_SIZE = 64
+    STATISTICS_COLUMN_WIDTH = 4
+    STATISTICS_HEADER_BG = "light yellow"
 
-label = tk.Label(root, text='', font=('Helvetica', 260))
+    def __init__(self):
+        tk.Tk.__init__(self)
+        self.dice_values = [3]
+        self.default_font = tkfont.Font(size=self.DEFAULT_FONT_SIZE)
+        self.stringvar_dice = self.dice_frame()
+        self.dice_frame_update()
+        self.stat_labels, self.stat_stringvars = self.statistics_frame()
+        self.columnconfigure(0, weight=1)
+        self.title("Dice Rolling Simulator")
+        self.resizable(width=False, height=False)
+        self.mainloop()
 
-def roll_dice():
-    dice = ['\u2680', '\u2681', '\u2682', '\u2683', '\u2684', '\u2685', '\u27a4'] # https://www.htmlsymbols.xyz/games-symbols/dice
-#    label.configure(text=f'{random.choice(dice)} {random.choice(dice)}')
-    label.configure(text=dice[5])
-    label.pack()
+    def dice_frame(self):
+        frame = tk.LabelFrame(self, text="Latest Dice Roll", font=self.default_font)
+        frame.grid(padx=self.FRAME_PADDING, pady=self.FRAME_PADDING, sticky="EW")
+        stringvar = tk.StringVar()
+        font = tkfont.Font(size=self.DICE_FONT_SIZE)
+        label = tk.Label(frame, textvariable=stringvar, fg="blue", font=font)
+        label.grid()
+        frame.columnconfigure(0, weight=1)
+        return stringvar
 
-roll_dice()
-button = tk.Button(root, text='roll dice', foreground='blue', command=roll_dice)
-button.pack()
-root.mainloop()
+    def dice_frame_update(self):
+        dice_value_text = ""
+        for dice_value in self.dice_values:
+            dice_value_text += self.DICE_SYMBOLS[dice_value-1]
+        self.stringvar_dice.set(dice_value_text)
+
+    def statistics_frame(self):
+        stat_labels = {}
+        stat_stringvars = {}
+        statistics_frame = tk.LabelFrame(self, text="Statistics", font=self.default_font)
+        statistics_frame.grid(padx=self.FRAME_PADDING, pady=(0, self.FRAME_PADDING))
+        frame = tk.Frame(statistics_frame)
+        frame.grid(padx=self.FRAME_PADDING*2, pady=self.FRAME_PADDING*2)
+        for column in range (0, 6*DICE_AMOUNT_MAX+1):
+            column_frame = tk.Frame(frame)
+            column_frame.grid(column=column, row=0)
+            for row, row_header in enumerate(STATISTICS_HEADERS, 0):
+                cell = tk.Frame(column_frame, relief=tk.RIDGE, borderwidth=1)
+                cell.grid(column=column, row=row, sticky="EW")
+                label = tk.Label(cell, font=self.default_font)
+                if column == 0 or row == 0:
+                    cell["bg"] = self.STATISTICS_HEADER_BG
+                    label["bg"] = self.STATISTICS_HEADER_BG
+                    if column == 0:
+                        label["text"] = row_header
+                        alignment = "W"
+                    else:
+                        label["text"] = str(column)
+                        label["width"] = self.STATISTICS_COLUMN_WIDTH
+                        alignment = "EW"
+                else:
+                    alignment = "E"
+
+                label.grid(column=column, row=row, sticky=alignment)
+                cell.columnconfigure(0, weight=1)
+        return stat_labels, stat_stringvars
+
+DiceGui()
