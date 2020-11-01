@@ -4,7 +4,7 @@ import tkinter as tk # import all tkinter functions
 import tkinter.font as tkfont
 
 STATISTICS_HEADERS = ["Dice Sum", "Result Counts", "Distribution [%]"]
-DICE_AMOUNT_MAX = 4
+DICE_AMOUNT_MAX = 5
 
 
 class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
@@ -12,8 +12,9 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
     # html symbols of dice 1 to 6 eyes (https://www.htmlsymbols.xyz/games-symbols/dice)
     DICE_SYMBOLS = ["\u2680", "\u2681", "\u2682", "\u2683", "\u2684", "\u2685"]
 
-    FRAME_PADDING = 4
+    PADDING_DEFAULT = 8
     DEFAULT_FONT_SIZE = 10
+    FONT_FRAME_FACTOR = 1.25
     DICE_FONT_SIZE = 128
     STATISTICS_COLUMN_WIDTH = 4
     STATISTICS_HEADER_BG = "light yellow"
@@ -23,11 +24,15 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
     def __init__(self):
         tk.Tk.__init__(self)
         self.dice_values = [1, 2, 3, 4]
-        self.dice_amount = 4
+        self.dice_amount = DICE_AMOUNT_MAX - 1
+
+        # set fonts (https: // www.tutorialspoint.com / python / tk_fonts.htm)
         self.default_font = tkfont.Font(size=self.DEFAULT_FONT_SIZE)
+        self.frame_font = tkfont.Font(size=int(self.FONT_FRAME_FACTOR * self.DEFAULT_FONT_SIZE))
+
         self.stringvar_dice = self.dice_frame()
         self.dice_update()
-        self.stat_labels, self.stat_stringvars = self.statistics_frame()
+        self.statistics_frame()
         self.statistics_reset()
         self.statistics_update(5, "8", "55.8")
         self.columnconfigure(0, weight=1)
@@ -36,8 +41,8 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
         self.mainloop()
 
     def dice_frame(self):
-        frame = tk.LabelFrame(self, text="Latest Dice Roll", font=self.default_font, labelanchor="n")
-        frame.grid(padx=self.FRAME_PADDING, pady=self.FRAME_PADDING, sticky="EW")
+        frame = tk.LabelFrame(self, text=" Latest Dice Roll ", font=self.frame_font, labelanchor="n")
+        frame.grid(padx=self.PADDING_DEFAULT, pady=self.PADDING_DEFAULT, sticky="EW")
         stringvar = tk.StringVar()
         font = tkfont.Font(size=self.DICE_FONT_SIZE)
         label = tk.Label(frame, textvariable=stringvar, fg="blue", font=font)
@@ -51,13 +56,9 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
             dice_value_text += self.DICE_SYMBOLS[dice_value-1]
         self.stringvar_dice.set(dice_value_text)
 
-    def statistics_frame(self):
-        stat_labels = {}
-        stat_stringvars = {}
-        statistics_frame = tk.LabelFrame(self, text="Statistics", font=self.default_font, labelanchor="n")
-        statistics_frame.grid(padx=self.FRAME_PADDING, pady=(0, self.FRAME_PADDING))
-        frame = tk.Frame(statistics_frame)
-        frame.grid(padx=self.FRAME_PADDING*2, pady=self.FRAME_PADDING*2)
+    def statistics_table(self, frame):
+        self.stat_labels = {}
+        self.stat_stringvars = {}
         for column in range (0, 6*DICE_AMOUNT_MAX+1):
             column_frame = tk.Frame(frame)
             column_frame.grid(column=column, row=0)
@@ -72,8 +73,8 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
                         label["text"] = row_header
                         alignment = "W"
                         if row > 0: # new statistics row for containing values
-                            stat_labels[row_header] = []
-                            stat_stringvars[row_header] = []
+                            self.stat_labels[row_header] = []
+                            self.stat_stringvars[row_header] = []
                     else:
                         label["text"] = str(column)
                         label["width"] = self.STATISTICS_COLUMN_WIDTH
@@ -81,12 +82,36 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
                 else: # statistics cell containing value
                     stringvar = tk.StringVar()
                     label["textvariable"] = stringvar
-                    stat_labels[row_header].append(label)
-                    stat_stringvars[row_header].append(stringvar)
+                    self.stat_labels[row_header].append(label)
+                    self.stat_stringvars[row_header].append(stringvar)
                     alignment = "E"
                 label.grid(column=column, row=row, sticky=alignment)
                 cell.columnconfigure(0, weight=1)
-        return stat_labels, stat_stringvars
+
+    def statistics_frame(self):
+        statistics_frame = tk.LabelFrame(self, text=" Statistics ", font=self.frame_font, labelanchor="n")
+        statistics_frame.grid(padx=self.PADDING_DEFAULT, pady=(0, self.PADDING_DEFAULT))
+
+        # Rolling counts frame
+        self.stringvar_rolling_counts = tk.StringVar()
+        self.stringvar_rolling_counts.set("0")
+        roll_count_frame = tk.Frame(statistics_frame)
+        roll_count_frame.grid(padx=self.PADDING_DEFAULT*2, pady=self.PADDING_DEFAULT, sticky="EW")
+        cell = tk.Frame(roll_count_frame, relief=tk.RIDGE, borderwidth=1)
+        cell.grid()
+        label = tk.Label(cell, text="Rollings", font=self.default_font)
+        label["bg"] = self.STATISTICS_HEADER_BG
+        label.grid()
+        cell = tk.Frame(roll_count_frame, relief=tk.RIDGE, borderwidth=1)
+        cell.grid(row=0, column=1)
+        label = tk.Label(cell, textvariable=self.stringvar_rolling_counts, font=self.default_font, anchor='e')
+        label["bg"] = self.STATISTICS_ACTIVE_BG
+        label.grid(ipadx=int(self.DEFAULT_FONT_SIZE/3), sticky="E") # ipadx to create a little space in front of value
+
+        table_frame = tk.Frame(statistics_frame)
+        table_frame.grid(padx=self.PADDING_DEFAULT*2, pady=(self.PADDING_DEFAULT, self.PADDING_DEFAULT*2))
+        self.statistics_table(table_frame)
+        statistics_frame.columnconfigure(0, weight=1)
 
     def statistics_reset(self):
         first_active_column = self.dice_amount - 1
