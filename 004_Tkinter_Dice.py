@@ -10,44 +10,44 @@ DICE_AMOUNT_MAX = 5
 DICE_ROLLING_INTERVAL = 3.0 # seconds
 
 # html symbols of dice 1 to 6 eyes (https://www.htmlsymbols.xyz/games-symbols/dice)
-DICE_SYMBOLS = ["", "\u2680", "\u2681", "\u2682", "\u2683", "\u2684", "\u2685"]
+DICE_SYMBOLS = [" ", "\u2680", "\u2681", "\u2682", "\u2683", "\u2684", "\u2685"]
 
-
-class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
+class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
 
     PADDING_DEFAULT = 8
-    DEFAULT_FONT_SIZE = 10
-    FONT_FRAME_FACTOR = 1.4
-    DICE_FONT_SIZE = 128
+    FONT_SIZE_DEFAULT = 10
+    FONT_SIZE_LARGE = int(1.4 * FONT_SIZE_DEFAULT)
+    FONT_SIZE_DICE = int(12 * FONT_SIZE_DEFAULT)
     STATISTICS_COLUMN_WIDTH = 4
     STATISTICS_HEADER_BG = "light yellow"
     STATISTICS_ACTIVE_BG = "white"
     STATISTICS_INACTIVE_BG = "light gray"
+    BUTTON_START_BG = "light green"
+    BUTTON_STOP_BG = "pink"
+    BUTTON_DISABLED_BG = STATISTICS_INACTIVE_BG
 
     def __init__(self):
         tk.Tk.__init__(self)
-        self.dice_amount = DICE_AMOUNT_MAX
-        self.dice_values = [6] * self.dice_amount
-
-        # set fonts (https://www.tutorialspoint.com/python/tk_fonts.htm)
-        self.default_font = tkfont.Font(size=self.DEFAULT_FONT_SIZE)
-        self.frame_font = tkfont.Font(size=int(self.FONT_FRAME_FACTOR * self.DEFAULT_FONT_SIZE))
-
-        self.stringvar_dice = self.dice_frame()
-        self.dice_update()
-        self.statistics_frame()
-        self.statistics_reset()
-        self.statistics_update(5, "8", "  1.6")
-#        self.columnconfigure(0, weight=1)
         self.title("Dice Rolling Simulator")
         self.resizable(width=False, height=False)
+
+        # set fonts (https://www.tutorialspoint.com/python/tk_fonts.htm)
+        self.default_font = tkfont.Font(size=self.FONT_SIZE_DEFAULT)
+        self.large_font = tkfont.Font(size=self.FONT_SIZE_LARGE)
+
+        self.stringvar_dice = self.dice_frame()
+        self.statistics_frame()
+        self.statistics_reset(0)
+
+        self.user_input_frame()
+
         self.mainloop()
 
     def dice_frame(self, title="Latest Dice Roll"):
-        frame = tk.LabelFrame(self, text=" "+title+" ", font=self.frame_font, labelanchor="n")
+        frame = tk.LabelFrame(self, text=" "+title+" ", font=self.large_font, labelanchor="n")
         frame.grid(padx=self.PADDING_DEFAULT, pady=self.PADDING_DEFAULT, sticky="EW")
         stringvar = tk.StringVar()
-        font = tkfont.Font(size=self.DICE_FONT_SIZE)
+        font = tkfont.Font(size=self.FONT_SIZE_DICE)
         label = tk.Label(frame, textvariable=stringvar, fg="blue", font=font)
         label.grid()
         frame.columnconfigure(0, weight=1)
@@ -60,7 +60,7 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
         self.stringvar_dice.set(dice_value_text)
 
     def statistics_frame(self, title="Statistics"):
-        statistics_frame = tk.LabelFrame(self, text=" " + title + " ", font=self.frame_font, labelanchor="n")
+        statistics_frame = tk.LabelFrame(self, text=" " + title + " ", font=self.large_font, labelanchor="n")
         statistics_frame.grid(padx=self.PADDING_DEFAULT, pady=(0, self.PADDING_DEFAULT))
         self.statistics_rolling_info(statistics_frame)
         table_frame = tk.Frame(statistics_frame)
@@ -114,11 +114,11 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
         cell.grid(row=0, column=1)
         label = tk.Label(cell, textvariable=self.stringvar_rolling_counts, font=self.default_font, anchor='e')
         label["bg"] = self.STATISTICS_ACTIVE_BG
-        label.grid(ipadx=int(self.DEFAULT_FONT_SIZE/3), sticky="E") # ipadx to create a little space in front of value
+        label.grid(ipadx=int(self.FONT_SIZE_DEFAULT/3), sticky="E") # ipadx to create a little space in front of value
 
-    def statistics_reset(self):
-        first_active_column = self.dice_amount - 1
-        last_active_column = self.dice_amount * 6 - 1
+    def statistics_reset(self, number_of_dices):
+        first_active_column = number_of_dices - 1
+        last_active_column = number_of_dices * 6 - 1
         for row, row_header in enumerate(self.stat_labels, 0):
             label_list = self.stat_labels[row_header]
             stringvar_list = self.stat_stringvars[row_header]
@@ -140,6 +140,43 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
         stringvar = stringvar_list[dice_sum - 1]
         stringvar.set(distribution)
 
+    def user_input_frame(self):
+        input_frame = tk.Frame()
+        input_frame.grid(pady=(0, self.PADDING_DEFAULT))
+
+        self.button_start = tk.Button(input_frame, text="Start", font=self.large_font, command=self.start_dice_rolling)
+        self.button_start = tk.Button(input_frame, text="Start", font=self.large_font, command=self.start_dice_rolling)
+        self.button_start["bg"] = self.BUTTON_START_BG
+        self.button_start.grid()
+
+        self.button_stop = tk.Button(input_frame, text="Stop", font=self.large_font, command=self.stop_dice_rolling)
+        self.button_stop.grid(row=0, column=1, padx=(self.PADDING_DEFAULT, 0))
+        self.button_stop["bg"] = self.BUTTON_DISABLED_BG
+        self.button_stop["state"] = "disabled"
+
+        self.label_dices = tk.Label(input_frame, text="Number of dices", font=self.large_font)
+        self.label_dices.grid(row=0, column=3, padx=(self.PADDING_DEFAULT*5, 0))
+
+        self.DiceAmounts = tk.IntVar()
+        self.DiceAmounts.set(1)
+        self.spinbox_dices = tk.Spinbox(input_frame, from_=1, to=DICE_AMOUNT_MAX, font=self.large_font, justify="right")
+        self.spinbox_dices["textvariable"] = self.DiceAmounts
+        self.spinbox_dices["width"] = 2
+        self.spinbox_dices.grid(row=0, column=4, padx=(int(self.PADDING_DEFAULT/2), 0))
+
+    def start_dice_rolling(self):
+        self.button_start["state"] = "disabled"
+        self.button_start["bg"] = self.BUTTON_DISABLED_BG
+        self.spinbox_dices["state"] = "disabled"
+        self.button_stop["state"] = "normal"
+        self.button_stop["bg"] = self.BUTTON_STOP_BG
+
+    def stop_dice_rolling(self):
+        self.button_stop["state"] = "disabled"
+        self.button_stop["bg"] = self.BUTTON_DISABLED_BG
+        self.button_start["bg"] = self.BUTTON_START_BG
+        self.button_start["state"] = "normal"
+        self.spinbox_dices["state"] = "normal"
 
 class DiceRolling():
 
@@ -204,7 +241,6 @@ class DiceRollResult():
             self.statistics_distribution[index] = self.statistics_counts[index] / self.number_of_rollings * 100
         print(self.statistics_counts)
         print(self.statistics_distribution)
-
 
 
 data_to_gui = None
