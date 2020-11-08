@@ -1,16 +1,19 @@
 """ import module functions (Python 3.xx) """
 import random
+import time
+import threading
 import tkinter as tk # import all tkinter functions
 import tkinter.font as tkfont
 
 STATISTICS_HEADERS = ["Dice Sum", "Result Counts", "Distribution [%]"]
 DICE_AMOUNT_MAX = 5
+DICE_ROLLING_INTERVAL = 3.0 # seconds
+
+# html symbols of dice 1 to 6 eyes (https://www.htmlsymbols.xyz/games-symbols/dice)
+DICE_SYMBOLS = ["", "\u2680", "\u2681", "\u2682", "\u2683", "\u2684", "\u2685"]
 
 
 class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
-
-    # html symbols of dice 1 to 6 eyes (https://www.htmlsymbols.xyz/games-symbols/dice)
-    DICE_SYMBOLS = ["\u2680", "\u2681", "\u2682", "\u2683", "\u2684", "\u2685"]
 
     PADDING_DEFAULT = 8
     DEFAULT_FONT_SIZE = 10
@@ -23,10 +26,10 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
 
     def __init__(self):
         tk.Tk.__init__(self)
-        self.dice_values = [1, 2, 3, 4]
-        self.dice_amount = DICE_AMOUNT_MAX - 1
+        self.dice_amount = DICE_AMOUNT_MAX
+        self.dice_values = [6] * self.dice_amount
 
-        # set fonts (https: // www.tutorialspoint.com / python / tk_fonts.htm)
+        # set fonts (https://www.tutorialspoint.com/python/tk_fonts.htm)
         self.default_font = tkfont.Font(size=self.DEFAULT_FONT_SIZE)
         self.frame_font = tkfont.Font(size=int(self.FONT_FRAME_FACTOR * self.DEFAULT_FONT_SIZE))
 
@@ -34,7 +37,7 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
         self.dice_update()
         self.statistics_frame()
         self.statistics_reset()
-        self.statistics_update(5, "8", "55.8")
+        self.statistics_update(5, "8", "  1.6")
 #        self.columnconfigure(0, weight=1)
         self.title("Dice Rolling Simulator")
         self.resizable(width=False, height=False)
@@ -53,7 +56,7 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
     def dice_update(self):
         dice_value_text = ""
         for dice_value in self.dice_values:
-            dice_value_text += self.DICE_SYMBOLS[dice_value-1]
+            dice_value_text += DICE_SYMBOLS[dice_value]
         self.stringvar_dice.set(dice_value_text)
 
     def statistics_frame(self, title="Statistics"):
@@ -137,5 +140,76 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to keep all GUI in it's own class
         stringvar = stringvar_list[dice_sum - 1]
         stringvar.set(distribution)
 
+
+class DiceRolling():
+
+    def __init__(self, data_to_gui, data_from_gui):
+        thread_target = self.rolling_generator_thread
+        thread_name = __class__.__name__ + "." + thread_target.__name__
+        rolling_thread = threading.Thread(target=thread_target, name=thread_name, args=(data_from_gui, data_to_gui,))
+        rolling_thread.setDaemon(True) # stop thread when script exits
+        rolling_thread.start()
+
+    def rolling_generator_thread(self, data_from_gui, data_to_gui):
+        roll_result = DiceRollResult()
+        start_rolling = True
+        while True: # loop until the script is terminated (by user)
+            if start_rolling:
+                start_rolling = False
+                print("== New Dice Rolling Session Started ==")
+                number_of_dices = 1
+                roll_result.init(number_of_dices)
+            self.dice_roll(roll_result)
+            time.sleep(DICE_ROLLING_INTERVAL)
+
+    def dice_roll(self, roll_result):
+        for dice_index in range(0, roll_result.number_of_dices):
+            dice = random.randint(1, 6)
+            roll_result.dices[dice_index] = dice
+        roll_result.update_statistics()
+        print_line = "Dice Roll " + roll_result.number_of_rollings_str + " ==> "
+        for dice_index in range(0, roll_result.number_of_dices):
+            dice = roll_result.dices[dice_index]
+            if dice_index > 0:
+                print_line += ", "
+            print_line += DICE_SYMBOLS[dice] + "=" + str(dice)
+        print(print_line)
+
+    def create_gui_data(self):
+        pass
+
+class DiceRollResult():
+
+    def __init__(self):
+        self.statistics_results = DICE_AMOUNT_MAX * 6
+        self.dices = [0] * self.statistics_results
+        self.statistics_counts = [0] * self.statistics_results
+        self.statistics_distribution = [0] * self.statistics_results
+
+    def init(self, number_of_dices):
+        self.number_of_rollings = 0
+        self.number_of_dices = number_of_dices
+        for index in range(0, self.statistics_results):
+            self.statistics_counts[index] = 0
+            self.statistics_distribution[index] = 0
+
+    def update_statistics(self):
+        self.number_of_rollings += 1
+        self.number_of_rollings_str = str(self.number_of_rollings)
+        self.sum = 0
+        for dice_index in range(0, self.number_of_dices):
+            self.sum += self.dices[dice_index]
+        self.statistics_counts[self.sum-1] += 1
+        for index in range(0, self.statistics_results):
+            self.statistics_distribution[index] = self.statistics_counts[index] / self.number_of_rollings * 100
+        print(self.statistics_counts)
+        print(self.statistics_distribution)
+
+
+
+data_to_gui = None
+data_from_gui = None
+
+rolling_generator = DiceRolling(data_to_gui, data_from_gui)
 
 DiceGui()
