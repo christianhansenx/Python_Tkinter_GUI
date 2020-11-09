@@ -1,16 +1,18 @@
 """ import module functions (Python 3.xx) """
 import random
 import time
+from timeit import default_timer as timer
 import threading
 import tkinter as tk # import all tkinter functions
 import tkinter.font as tkfont
 
-STATISTICS_HEADERS = ["Dice Sum", "Result Counts", "Distribution [%]"]
 DICE_AMOUNT_MAX = 5
-DICE_ROLLING_INTERVAL = 3.0 # seconds
+DICE_ROLLING_INTERVAL = 1 # seconds
 
 # html symbols of dice 1 to 6 eyes (https://www.htmlsymbols.xyz/games-symbols/dice)
 DICE_SYMBOLS = [" ", "\u2680", "\u2681", "\u2682", "\u2683", "\u2684", "\u2685"]
+
+STATISTICS_HEADERS = ["Dice Sum", "Result Counts", "Distribution [%]"]
 
 class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
 
@@ -178,6 +180,29 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
         self.button_start["state"] = "normal"
         self.spinbox_dices["state"] = "normal"
 
+
+class DataToGui():
+
+    def __init__(self, rolling_count, number_of_dices, dices, statistics_counts, statistics_distribution):
+        self.data = {}
+        data["Rollings"] = str(rolling_count)
+        data["Dices"] = []
+        data["Result Counts"] = [] * DICE_AMOUNT_MAX * 6
+        data["Distribution [%]"] = [] * DICE_AMOUNT_MAX * 6
+        for dice_index in range(0, number_of_dices):
+            dice_value_str = str(dices[dice_index])
+            self.data["Dices"].append(dice_value_str)
+        statistics_counts_data = [""] * DICE_AMOUNT_MAX * 6
+        statistics_distribution_data = [""] * DICE_AMOUNT_MAX * 6
+        for statistics_index in range(number_of_dices-1, number_of_dices*6):
+            statistics_counts = statistics_counts[statistics_index]
+            if statistics_counts > 0:
+                statistics_counts_data[statistics_index] = str(statistics_counts)
+
+
+
+
+
 class DiceRolling():
 
     def __init__(self, data_to_gui, data_from_gui):
@@ -188,59 +213,49 @@ class DiceRolling():
         rolling_thread.start()
 
     def rolling_generator_thread(self, data_from_gui, data_to_gui):
-        roll_result = DiceRollResult()
+        NUMBER_OF_RESULTS = DICE_AMOUNT_MAX * 6
+        dices = [0] * DICE_AMOUNT_MAX
+        statistics_counts = [0] * NUMBER_OF_RESULTS
+        statistics_distribution = [0] * NUMBER_OF_RESULTS
         start_rolling = True
         while True: # loop until the script is terminated (by user)
             if start_rolling:
                 start_rolling = False
                 print("== New Dice Rolling Session Started ==")
-                number_of_dices = 1
-                roll_result.init(number_of_dices)
-            self.dice_roll(roll_result)
-            time.sleep(DICE_ROLLING_INTERVAL)
+                number_of_dices = 5 ## TODO
+                rolling_count = 0
+                for index in range(0, NUMBER_OF_RESULTS):
+                    statistics_counts[index] = 0
+                    statistics_distribution[index] = 0
+            interval_timer_start = timer()
+            rolling_count += 1
+            self.dice_roll(rolling_count, number_of_dices, dices, statistics_counts, statistics_distribution)
+            while timer() - interval_timer_start < DICE_ROLLING_INTERVAL:
+                time.sleep(DICE_ROLLING_INTERVAL/10)
 
-    def dice_roll(self, roll_result):
-        for dice_index in range(0, roll_result.number_of_dices):
+    @staticmethod
+    def dice_roll(rolling_count, number_of_dices, dices, statistics_counts, statistics_distribution):
+        for dice_index in range(0, number_of_dices):
             dice = random.randint(1, 6)
-            roll_result.dices[dice_index] = dice
-        roll_result.update_statistics()
-        print_line = "Dice Roll " + roll_result.number_of_rollings_str + " ==> "
-        for dice_index in range(0, roll_result.number_of_dices):
-            dice = roll_result.dices[dice_index]
+            dices[dice_index] = dice
+        print_line = "Dice Roll " + str(rolling_count) + " ==> "
+        for dice_index in range(0, number_of_dices):
+            dice = dices[dice_index]
             if dice_index > 0:
                 print_line += ", "
             print_line += DICE_SYMBOLS[dice] + "=" + str(dice)
         print(print_line)
+        sum = 0
+        for dice_index in range(0, number_of_dices):
+            sum += dices[dice_index]
+        statistics_counts[sum-1] += 1
+        for index in range(number_of_dices-1, number_of_dices*6):
+            statistics_distribution[index] = statistics_counts[index] / rolling_count * 100
+        print(statistics_counts)
+        print(statistics_distribution)
 
     def create_gui_data(self):
         pass
-
-class DiceRollResult():
-
-    def __init__(self):
-        self.statistics_results = DICE_AMOUNT_MAX * 6
-        self.dices = [0] * self.statistics_results
-        self.statistics_counts = [0] * self.statistics_results
-        self.statistics_distribution = [0] * self.statistics_results
-
-    def init(self, number_of_dices):
-        self.number_of_rollings = 0
-        self.number_of_dices = number_of_dices
-        for index in range(0, self.statistics_results):
-            self.statistics_counts[index] = 0
-            self.statistics_distribution[index] = 0
-
-    def update_statistics(self):
-        self.number_of_rollings += 1
-        self.number_of_rollings_str = str(self.number_of_rollings)
-        self.sum = 0
-        for dice_index in range(0, self.number_of_dices):
-            self.sum += self.dices[dice_index]
-        self.statistics_counts[self.sum-1] += 1
-        for index in range(0, self.statistics_results):
-            self.statistics_distribution[index] = self.statistics_counts[index] / self.number_of_rollings * 100
-        print(self.statistics_counts)
-        print(self.statistics_distribution)
 
 
 data_to_gui = None
