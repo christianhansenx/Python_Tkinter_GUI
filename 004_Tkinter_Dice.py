@@ -181,26 +181,30 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
         self.spinbox_dices["state"] = "normal"
 
 
+class DataFromGui():
+
+    def __init__(self):
+        pass
+
 class DataToGui():
 
     def __init__(self, rolling_count, number_of_dices, dices, statistics_counts, statistics_distribution):
         self.data = {}
-        data["Rollings"] = str(rolling_count)
-        data["Dices"] = []
-        data["Result Counts"] = [] * DICE_AMOUNT_MAX * 6
-        data["Distribution [%]"] = [] * DICE_AMOUNT_MAX * 6
+        self.data["Rollings"] = str(rolling_count)
+        self.data["Dices"] = []
+        self.data["Result Counts"] = [""] * DICE_AMOUNT_MAX * 6
+        self.data["Distribution [%]"] = [""] * DICE_AMOUNT_MAX * 6
         for dice_index in range(0, number_of_dices):
             dice_value_str = str(dices[dice_index])
             self.data["Dices"].append(dice_value_str)
-        statistics_counts_data = [""] * DICE_AMOUNT_MAX * 6
-        statistics_distribution_data = [""] * DICE_AMOUNT_MAX * 6
-        for statistics_index in range(number_of_dices-1, number_of_dices*6):
-            statistics_counts = statistics_counts[statistics_index]
-            if statistics_counts > 0:
-                statistics_counts_data[statistics_index] = str(statistics_counts)
+        for index in range(number_of_dices-1, number_of_dices*6):
+            counts = statistics_counts[index]
+            if counts > 0:
+                self.data["Result Counts"][index] = str(counts)
+                self.data["Distribution [%]"][index] = str("%.1f" % statistics_distribution[index])
 
-
-
+    def __getitem__(self, key):
+        return self.data[key]
 
 
 class DiceRolling():
@@ -230,6 +234,9 @@ class DiceRolling():
             interval_timer_start = timer()
             rolling_count += 1
             self.dice_roll(rolling_count, number_of_dices, dices, statistics_counts, statistics_distribution)
+
+            data_to_gui = DataToGui(rolling_count, number_of_dices, dices, statistics_counts, statistics_distribution)
+
             while timer() - interval_timer_start < DICE_ROLLING_INTERVAL:
                 time.sleep(DICE_ROLLING_INTERVAL/10)
 
@@ -251,11 +258,6 @@ class DiceRolling():
         statistics_counts[sum-1] += 1
         for index in range(number_of_dices-1, number_of_dices*6):
             statistics_distribution[index] = statistics_counts[index] / rolling_count * 100
-        print(statistics_counts)
-        print(statistics_distribution)
-
-    def create_gui_data(self):
-        pass
 
 
 data_to_gui = None
