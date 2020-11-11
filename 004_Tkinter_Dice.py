@@ -3,11 +3,12 @@ import random
 import time
 from timeit import default_timer as timer
 import threading
+import queue
 import tkinter as tk # import all tkinter functions
 import tkinter.font as tkfont
 
 DICE_AMOUNT_MAX = 5
-DICE_ROLLING_INTERVAL = 1 # seconds
+DICE_ROLLING_INTERVAL = 0.8 # seconds
 
 # html symbols of dice 1 to 6 eyes (https://www.htmlsymbols.xyz/games-symbols/dice)
 DICE_SYMBOLS = [" ", "\u2680", "\u2681", "\u2682", "\u2683", "\u2684", "\u2685"]
@@ -28,7 +29,9 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
     BUTTON_STOP_BG = "pink"
     BUTTON_DISABLED_BG = STATISTICS_INACTIVE_BG
 
-    def __init__(self):
+    def __init__(self, data_to_gui, data_from_gui):
+        self.data_to_gui = data_to_gui
+        self.data_from_gui = data_from_gui
         tk.Tk.__init__(self)
         self.title("Dice Rolling Simulator")
         self.resizable(width=False, height=False)
@@ -159,10 +162,10 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
         self.label_dices = tk.Label(input_frame, text="Number of dices", font=self.large_font)
         self.label_dices.grid(row=0, column=3, padx=(self.PADDING_DEFAULT*5, 0))
 
-        self.DiceAmounts = tk.IntVar()
-        self.DiceAmounts.set(1)
+        self.dice_amount_int = tk.IntVar()
+        self.dice_amount_int.set(1)
         self.spinbox_dices = tk.Spinbox(input_frame, from_=1, to=DICE_AMOUNT_MAX, font=self.large_font, justify="right")
-        self.spinbox_dices["textvariable"] = self.DiceAmounts
+        self.spinbox_dices["textvariable"] = self.dice_amount_int
         self.spinbox_dices["width"] = 2
         self.spinbox_dices.grid(row=0, column=4, padx=(int(self.PADDING_DEFAULT/2), 0))
 
@@ -172,6 +175,9 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
         self.spinbox_dices["state"] = "disabled"
         self.button_stop["state"] = "normal"
         self.button_stop["bg"] = self.BUTTON_STOP_BG
+        data_packet = DataFromGui()
+        data_packet.start_dice_rolling(self.dice_amount_int.get())
+        self.data_from_gui.put(data_packet)
 
     def stop_dice_rolling(self):
         self.button_stop["state"] = "disabled"
@@ -179,12 +185,20 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
         self.button_start["bg"] = self.BUTTON_START_BG
         self.button_start["state"] = "normal"
         self.spinbox_dices["state"] = "normal"
-
+        data_packet = DataFromGui()
+        data_packet.stop_dice_rolling()
+        self.data_from_gui.put(data_packet)
 
 class DataFromGui():
 
-    def __init__(self):
-        pass
+    def start_dice_rolling(self, number_of_dices):
+        self.data = {"Command":"START", "Dice Amount":number_of_dices}
+
+    def stop_dice_rolling(self):
+        self.data = {"Command":"STOP"}
+
+    def __getitem__(self, key):
+        return self.data[key]
 
 class DataToGui():
 
@@ -221,31 +235,35 @@ class DiceRolling():
         dices = [0] * DICE_AMOUNT_MAX
         statistics_counts = [0] * NUMBER_OF_RESULTS
         statistics_distribution = [0] * NUMBER_OF_RESULTS
-        start_rolling = True
+        dice_rolling = False
         while True: # loop until the script is terminated (by user)
-            if start_rolling:
-                start_rolling = False
-                print("== New Dice Rolling Session Started ==")
-                number_of_dices = 5 ## TODO
-                rolling_count = 0
-                for index in range(0, NUMBER_OF_RESULTS):
-                    statistics_counts[index] = 0
-                    statistics_distribution[index] = 0
-            interval_timer_start = timer()
-            rolling_count += 1
-            self.dice_roll(rolling_count, number_of_dices, dices, statistics_counts, statistics_distribution)
+            if not data_from_gui.empty(): # if data from gui arrived
+                input_data = data_from_gui.get_nowait()
+                if input_data["Command"] == "START":
+                    dice_rolling = True
+                    number_of_dices = input_data["Dice Amount"]
+                    print("== Dice Rolling Session Started with %i dice(s) ==" % number_of_dices)
+                    rolling_count = 0
+                    for index in range(0, NUMBER_OF_RESULTS):
+                        statistics_counts[index] = 0
+                        statistics_distribution[index] = 0
+                    roll_interval_timer_start = timer() - DICE_ROLLING_INTERVAL # to trig first roll immediately
+                if input_data["Command"] == "STOP":
+                    print("== Dice Rolling Session Stopped ==\n")
+                    dice_rolling = False
+            if dice_rolling and timer() - roll_interval_timer_start >= DICE_ROLLING_INTERVAL:
+                    roll_interval_timer_start = timer()
+                    rolling_count += 1
+                    self.dice_roll(rolling_count, number_of_dices, dices, statistics_counts, statistics_distribution)
+                    data_to_gui = DataToGui(rolling_count, number_of_dices, dices, statistics_counts, statistics_distribution)
+            time.sleep(0.1)
 
-            data_to_gui = DataToGui(rolling_count, number_of_dices, dices, statistics_counts, statistics_distribution)
-
-            while timer() - interval_timer_start < DICE_ROLLING_INTERVAL:
-                time.sleep(DICE_ROLLING_INTERVAL/10)
-
-    @staticmethod
+    @staticmethod # must be static due to it's a supporting function to a thread in the same class
     def dice_roll(rolling_count, number_of_dices, dices, statistics_counts, statistics_distribution):
         for dice_index in range(0, number_of_dices):
             dice = random.randint(1, 6)
             dices[dice_index] = dice
-        print_line = "Dice Roll " + str(rolling_count) + " ==> "
+        print_line = "    Dice Roll " + str(rolling_count) + " ==> "
         for dice_index in range(0, number_of_dices):
             dice = dices[dice_index]
             if dice_index > 0:
@@ -260,9 +278,9 @@ class DiceRolling():
             statistics_distribution[index] = statistics_counts[index] / rolling_count * 100
 
 
-data_to_gui = None
-data_from_gui = None
+data_to_gui = queue.Queue() # thread safe data transfer to gui
+data_from_gui = queue.Queue() # thread safe data transfer from gui
 
 rolling_generator = DiceRolling(data_to_gui, data_from_gui)
 
-DiceGui()
+DiceGui(data_to_gui, data_from_gui)
