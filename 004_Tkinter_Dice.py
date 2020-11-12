@@ -189,6 +189,7 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
         data_packet.stop_dice_rolling()
         self.data_from_gui.put(data_packet)
 
+
 class DataFromGui():
 
     def start_dice_rolling(self, number_of_dices):
@@ -199,6 +200,7 @@ class DataFromGui():
 
     def __getitem__(self, key):
         return self.data[key]
+
 
 class DataToGui():
 
