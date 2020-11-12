@@ -260,7 +260,7 @@ class DiceRolling():
                     data_to_gui = DataToGui(rolling_count, number_of_dices, dices, statistics_counts, statistics_distribution)
             time.sleep(0.1)
 
-    @staticmethod # must be static due to it's a supporting function to a thread in the same class
+    @staticmethod # is static due to it's a supporting function to a thread in the same class
     def dice_roll(rolling_count, number_of_dices, dices, statistics_counts, statistics_distribution):
         for dice_index in range(0, number_of_dices):
             dice = random.randint(1, 6)
