@@ -4,21 +4,28 @@ import time
 from timeit import default_timer as timer
 import threading
 import queue
-import tkinter as tk # import all tkinter functions
+import tkinter as tk # Import all tkinter functions
 import tkinter.font as tkfont
 
-DICE_AMOUNT_MAX = 5
-DICE_ROLLING_INTERVAL = 0.8 # seconds
+DICE_AMOUNT_MAX = 4 # Maximum numbers of dices the user can select
+DICE_ROLLING_INTERVAL = 0.8 # The time between dice rollings in seconds
+
+# Interval between rolling info is updated in GUI
+# Must be shorter than DICE_ROLLING_INTERVAL avoid GUI update gets behind
 GUI_ROLLING_UPDATE_INTERVAL = DICE_ROLLING_INTERVAL / 5
 
 # html symbols of dice 1 to 6 eyes (https://www.htmlsymbols.xyz/games-symbols/dice)
 DICE_SYMBOLS = [" ", "\u2680", "\u2681", "\u2682", "\u2683", "\u2684", "\u2685"]
 
-STATISTICS_HEADERS = ["Dice Sum", "Occurrence", "Distribution [%]"]
+STATISTICS_HEADERS = ["Dice Sum", "Occurrence", "Distribution [%]"] # table row titles
 
-class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
+class DiceGui(tk.Tk):
+    """
+    All GUI visualisation and interaction is handled in this class.
+    It is a inheritance of tkinter to wrap all GUI in it's own class
+    """
 
-    PADDING_DEFAULT = 8
+    # Static values for styling GUI widgets
     FONT_SIZE_DEFAULT = 10
     FONT_SIZE_LARGE = int(1.4 * FONT_SIZE_DEFAULT)
     FONT_SIZE_DICE = int(12 * FONT_SIZE_DEFAULT)
@@ -29,6 +36,7 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
     BUTTON_START_BG = "light green"
     BUTTON_STOP_BG = "pink"
     BUTTON_DISABLED_BG = STATISTICS_INACTIVE_BG
+    PADDING_DEFAULT = 8
 
     def __init__(self, data_to_gui, data_from_gui):
         self.data_to_gui = data_to_gui
@@ -41,26 +49,26 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
         self.default_font = tkfont.Font(size=self.FONT_SIZE_DEFAULT)
         self.large_font = tkfont.Font(size=self.FONT_SIZE_LARGE)
 
-        self.stringvar_dice = self.dice_frame()
-        self.statistics_frame()
-        self.statistics_reset(0)
-        self.user_input_frame()
-        self.dice_rolling_update()
+        self.stringvar_dice = self._dice_frame()
+        self._statistics_frame()
+        self._statistics_reset(0)
+        self._user_input_frame()
+        self._dice_rolling_update()
         self.mainloop()
 
-    def dice_rolling_update(self):
+    def _dice_rolling_update(self):
         interval_timer_start = timer()
         if not self.data_to_gui.empty(): # if data to gui arrived
             output_data = data_to_gui.get_nowait()
-            self.dice_update(output_data["Dices"])
-            self.statistics_update(output_data)
+            self._dice_update(output_data["Dices"])
+            self._statistics_update(output_data)
         remaining_interval = GUI_ROLLING_UPDATE_INTERVAL - (timer() - interval_timer_start)
         remaining_interval_ms = int(remaining_interval*1000)
         if remaining_interval_ms < 50:
             remaining_interval_ms = 50 # ensure minimum 50ms to update GUI
-        self.after(remaining_interval_ms, self.dice_rolling_update)
+        self.after(remaining_interval_ms, self._dice_rolling_update)
 
-    def dice_frame(self, title="Latest Dice Roll"):
+    def _dice_frame(self, title="Latest Dice Roll"):
         frame = tk.LabelFrame(self, text=" "+title+" ", font=self.large_font, labelanchor="n")
         frame.grid(padx=self.PADDING_DEFAULT, pady=self.PADDING_DEFAULT, sticky="EW")
         stringvar = tk.StringVar()
@@ -70,21 +78,21 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
         frame.columnconfigure(0, weight=1)
         return stringvar
 
-    def dice_update(self, dices):
+    def _dice_update(self, dices):
         dice_value_text = ""
         for dice_value in dices:
             dice_value_text += DICE_SYMBOLS[dice_value]
         self.stringvar_dice.set(dice_value_text)
 
-    def statistics_frame(self, title="Statistics"):
+    def _statistics_frame(self, title="Statistics"):
         statistics_frame = tk.LabelFrame(self, text=" " + title + " ", font=self.large_font, labelanchor="n")
         statistics_frame.grid(padx=self.PADDING_DEFAULT, pady=(0, self.PADDING_DEFAULT))
-        self.statistics_rolling_info(statistics_frame)
+        self._statistics_rolling_info(statistics_frame)
         table_frame = tk.Frame(statistics_frame)
         table_frame.grid(padx=self.PADDING_DEFAULT * 2, pady=(self.PADDING_DEFAULT, self.PADDING_DEFAULT * 2))
-        self.statistics_table(table_frame)
+        self._statistics_table(table_frame)
 
-    def statistics_table(self, frame):
+    def _statistics_table(self, frame):
         self.stat_labels = {}
         self.stat_stringvars = {}
         for column in range (0, 6*DICE_AMOUNT_MAX+1):
@@ -116,7 +124,7 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
                 label.grid(column=column, row=row, sticky=alignment)
                 cell.columnconfigure(0, weight=1)
 
-    def statistics_rolling_info(self, frame):
+    def _statistics_rolling_info(self, frame):
         self.stringvar_rolling_counts = tk.StringVar()
         roll_count_frame = tk.Frame(frame)
         roll_count_frame.grid(padx=self.PADDING_DEFAULT*2, pady=self.PADDING_DEFAULT, sticky="EW")
@@ -131,9 +139,9 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
         label["bg"] = self.STATISTICS_ACTIVE_BG
         label.grid(ipadx=int(self.FONT_SIZE_DEFAULT/3), sticky="E") # ipadx to create a little space in front of value
 
-    def statistics_reset(self, number_of_dices):
+    def _statistics_reset(self, number_of_dices):
         self.stringvar_rolling_counts.set("0")
-        self.dice_update([])
+        self._dice_update([])
         first_active_column = number_of_dices - 1
         last_active_column = number_of_dices * 6 - 1
         for row, row_header in enumerate(self.stat_labels, 0):
@@ -149,7 +157,7 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
                     label["bg"] = self.STATISTICS_ACTIVE_BG
                     label.master["bg"] = self.STATISTICS_ACTIVE_BG
 
-    def statistics_update(self, data):
+    def _statistics_update(self, data):
         self.stringvar_rolling_counts.set(data["Rollings"])
         first_active_column = self.dice_amount_int.get() - 1
         last_active_column = self.dice_amount_int.get() * 6 - 1
@@ -157,16 +165,16 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
             self.stat_stringvars["Occurrence"][index].set(data["Occurrence"][index])
             self.stat_stringvars["Distribution [%]"][index].set(data["Distribution [%]"][index])
 
-    def user_input_frame(self):
+    def _user_input_frame(self):
         input_frame = tk.Frame()
         input_frame.grid(pady=(0, self.PADDING_DEFAULT))
 
-        self.button_start = tk.Button(input_frame, text="Start", font=self.large_font, command=self.start_dice_rolling)
-        self.button_start = tk.Button(input_frame, text="Start", font=self.large_font, command=self.start_dice_rolling)
+        self.button_start = tk.Button(input_frame, text="Start", font=self.large_font, command=self._start_dice_rolling)
+        self.button_start = tk.Button(input_frame, text="Start", font=self.large_font, command=self._start_dice_rolling)
         self.button_start["bg"] = self.BUTTON_START_BG
         self.button_start.grid()
 
-        self.button_stop = tk.Button(input_frame, text="Stop", font=self.large_font, command=self.stop_dice_rolling)
+        self.button_stop = tk.Button(input_frame, text="Stop", font=self.large_font, command=self._stop_dice_rolling)
         self.button_stop.grid(row=0, column=1, padx=(self.PADDING_DEFAULT, 0))
         self.button_stop["bg"] = self.BUTTON_DISABLED_BG
         self.button_stop["state"] = "disabled"
@@ -181,18 +189,18 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
         self.spinbox_dices["width"] = 2
         self.spinbox_dices.grid(row=0, column=4, padx=(int(self.PADDING_DEFAULT/2), 0))
 
-    def start_dice_rolling(self):
+    def _start_dice_rolling(self):
         self.button_start["state"] = "disabled"
         self.button_start["bg"] = self.BUTTON_DISABLED_BG
         self.spinbox_dices["state"] = "disabled"
         self.button_stop["state"] = "normal"
         self.button_stop["bg"] = self.BUTTON_STOP_BG
-        self.statistics_reset(self.dice_amount_int.get())
+        self._statistics_reset(self.dice_amount_int.get())
         data_packet = DataFromGui()
         data_packet.start_dice_rolling(self.dice_amount_int.get())
         self.data_from_gui.put(data_packet)
 
-    def stop_dice_rolling(self):
+    def _stop_dice_rolling(self):
         self.button_stop["state"] = "disabled"
         self.button_stop["bg"] = self.BUTTON_DISABLED_BG
         self.button_start["bg"] = self.BUTTON_START_BG
@@ -204,15 +212,20 @@ class DiceGui(tk.Tk): # Inheritance of tkinter to wrap all GUI in it's own class
 
 
 class DiceRolling():
+    """
+    This is the "dice rolling generator" thread which simulate the dice rollings.
+    It's running asynchronous to the GUI updates.
+    Thread safe data queues are used for interchange data between "dice rolling generator" and GUI.
+    """
 
     def __init__(self, data_to_gui, data_from_gui):
-        thread_target = self.rolling_generator_thread
+        thread_target = self._rolling_generator_thread
         thread_name = __class__.__name__ + "." + thread_target.__name__
         rolling_thread = threading.Thread(target=thread_target, name=thread_name, args=(data_from_gui, data_to_gui,))
         rolling_thread.setDaemon(True) # stop thread when script exits
         rolling_thread.start()
 
-    def rolling_generator_thread(self, data_from_gui, data_to_gui):
+    def _rolling_generator_thread(self, data_from_gui, data_to_gui):
         NUMBER_OF_RESULTS = DICE_AMOUNT_MAX * 6
         dices = [0] * DICE_AMOUNT_MAX
         statistics_counts = [0] * NUMBER_OF_RESULTS
@@ -236,14 +249,14 @@ class DiceRolling():
             if dice_rolling and timer() - roll_interval_timer_start >= DICE_ROLLING_INTERVAL:
                 roll_interval_timer_start = timer()
                 rolling_count += 1
-                self.dice_roll(rolling_count, number_of_dices, dices)
+                self._dice_roll(rolling_count, number_of_dices, dices)
                 data_packet = DataToGui(rolling_count, number_of_dices, dices)
                 data_packet.statistics(statistics_counts, statistics_distribution)
                 data_to_gui.put(data_packet)
             time.sleep(0.1)
 
     @staticmethod # is static due to it's a supporting function to a thread in the same class
-    def dice_roll(rolling_count, number_of_dices, dices):
+    def _dice_roll(rolling_count, number_of_dices, dices):
         for dice_index in range(0, number_of_dices):
             dice = random.randint(1, 6)
             dices[dice_index] = dice
@@ -262,6 +275,10 @@ class DiceRolling():
 
 
 class DataFromGui():
+    """
+    Data packet class for wrapping data to be transferred from GUI to "dice rolling generator".
+    The data are signals to start and stop the "dice rolling generator"
+    """
 
     def start_dice_rolling(self, number_of_dices):
         self.data = {"Command":"START", "Dice Amount":number_of_dices}
@@ -274,6 +291,10 @@ class DataFromGui():
 
 
 class DataToGui():
+    """
+    Data packet class for wrapping data to be transferred from "dice rolling generator" to GUI.
+    The data packet contain values of dice rolling and statistics in formats to easily be visualised by GUI.
+    """
 
     def __init__(self, rolling_count, number_of_dices, dices):
         self.data = {}
@@ -303,7 +324,7 @@ class DataToGui():
 
 
 if __name__ == "__main__":
-    data_to_gui = queue.Queue() # thread safe data transfer to gui
-    data_from_gui = queue.Queue() # thread safe data transfer from gui
-    rolling_generator = DiceRolling(data_to_gui, data_from_gui)
-    DiceGui(data_to_gui, data_from_gui)
+    data_to_gui = queue.Queue() # Thread safe data packets transfer to gui
+    data_from_gui = queue.Queue() # Thread safe data packets transfer from gui
+    rolling_generator = DiceRolling(data_to_gui, data_from_gui) # Aim "dice rolling generator"
+    DiceGui(data_to_gui, data_from_gui) # Aim the GUI
