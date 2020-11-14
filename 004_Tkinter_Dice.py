@@ -6,6 +6,8 @@ import threading
 import queue
 import tkinter as tk # Import all tkinter functions
 import tkinter.font as tkfont
+import sys
+import os
 
 DICE_AMOUNT_MAX = 4 # Maximum numbers of dices the user can select
 DICE_ROLLING_INTERVAL = 0.8 # The time between dice rollings in seconds
@@ -37,10 +39,11 @@ class DiceGui(tk.Tk):
     DISABLED_BG = "light gray"
     PADDING_DEFAULT = 8
 
-    def __init__(self, data_to_gui, data_from_gui):
+    def __init__(self, script_path, script_name, data_to_gui, data_from_gui):
         self.data_to_gui = data_to_gui
         self.data_from_gui = data_from_gui
         tk.Tk.__init__(self)
+        self.iconbitmap(script_path + "\\" + script_name + ".ico") # https://findicons.com/icon/download/80730/dice/48/ico
         self.title("Dice Rolling Simulator")
         self.resizable(width=False, height=False)
 
@@ -320,7 +323,18 @@ class DataToGui():
 
 
 if __name__ == "__main__":
+    SCRIPT_PATH_FILE = os.path.basename(sys.argv[0])
+    SCRIPT_FILE_NAME = os.path.basename(sys.argv[0])
+    SCRIPT_NAME = os.path.splitext(SCRIPT_FILE_NAME)[0]
+
+    try:
+        SCRIPT_PATH = sys._MEIPASS
+    except:
+        SCRIPT_PATH = os.path.dirname(sys.argv[0])
+
+    print("=== SCRIPT: %s ====\n" % SCRIPT_NAME)
+
     data_to_gui = queue.Queue() # Thread safe data packets transfer to gui
     data_from_gui = queue.Queue() # Thread safe data packets transfer from gui
     rolling_generator = DiceRolling(data_to_gui, data_from_gui) # Aim "dice rolling generator"
-    DiceGui(data_to_gui, data_from_gui) # Aim the GUI
+    DiceGui(SCRIPT_PATH, SCRIPT_NAME, data_to_gui, data_from_gui) # Aim the GUI
