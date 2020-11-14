@@ -260,17 +260,12 @@ class DiceRolling():
         for dice_index in range(0, number_of_dices):
             dice = random.randint(1, 6)
             dices[dice_index] = dice
-        print_line = "    Dice Roll " + str(rolling_count) + ": "
-        for dice_index in range(0, number_of_dices):
-            dice = dices[dice_index]
-            print_line += DICE_SYMBOLS[dice]
-        print_line += "  ("
+        print_line = "    Dice Roll " + str(rolling_count) + " = "
         for dice_index in range(0, number_of_dices):
             dice = dices[dice_index]
             if dice_index > 0:
                 print_line += ", "
             print_line += str(dice)
-        print_line += ")"
         print(print_line)
 
 
