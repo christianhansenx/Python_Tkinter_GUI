@@ -32,10 +32,9 @@ class DiceGui(tk.Tk):
     STATISTICS_COLUMN_WIDTH = 4
     STATISTICS_HEADER_BG = "light yellow"
     STATISTICS_ACTIVE_BG = "white"
-    STATISTICS_INACTIVE_BG = "light gray"
     BUTTON_START_BG = "light green"
     BUTTON_STOP_BG = "pink"
-    BUTTON_DISABLED_BG = STATISTICS_INACTIVE_BG
+    DISABLED_BG = "light gray"
     PADDING_DEFAULT = 8
 
     def __init__(self, data_to_gui, data_from_gui):
@@ -151,8 +150,8 @@ class DiceGui(tk.Tk):
                 label = label_list[column]
                 stringvar_list[column].set("")
                 if column < first_active_column or column > last_active_column:
-                    label["bg"] = self.STATISTICS_INACTIVE_BG
-                    label.master["bg"] = self.STATISTICS_INACTIVE_BG
+                    label["bg"] = self.DISABLED_BG
+                    label.master["bg"] = self.DISABLED_BG
                 else:
                     label["bg"] = self.STATISTICS_ACTIVE_BG
                     label.master["bg"] = self.STATISTICS_ACTIVE_BG
@@ -171,27 +170,28 @@ class DiceGui(tk.Tk):
 
         self.button_start = tk.Button(input_frame, text="Start", font=self.large_font, command=self._start_dice_rolling)
         self.button_start = tk.Button(input_frame, text="Start", font=self.large_font, command=self._start_dice_rolling)
-        self.button_start["bg"] = self.BUTTON_START_BG
         self.button_start.grid()
 
         self.button_stop = tk.Button(input_frame, text="Stop", font=self.large_font, command=self._stop_dice_rolling)
         self.button_stop.grid(row=0, column=1, padx=(self.PADDING_DEFAULT, 0))
-        self.button_stop["bg"] = self.BUTTON_DISABLED_BG
-        self.button_stop["state"] = "disabled"
 
         self.label_dices = tk.Label(input_frame, text="Number of dices", font=self.large_font)
         self.label_dices.grid(row=0, column=3, padx=(self.PADDING_DEFAULT*5, 0))
-
         self.dice_amount_int = tk.IntVar()
         self.dice_amount_int.set(1)
         self.spinbox_dices = tk.Spinbox(input_frame, from_=1, to=DICE_AMOUNT_MAX, font=self.large_font, justify="right")
         self.spinbox_dices["textvariable"] = self.dice_amount_int
         self.spinbox_dices["width"] = 2
         self.spinbox_dices.grid(row=0, column=4, padx=(int(self.PADDING_DEFAULT/2), 0))
+        self.spinbox_dices["readonlybackground"] = self.spinbox_dices["bg"]
+        self.spinbox_dices["selectbackground"] = self.spinbox_dices["bg"] # because of readonly then no select highlight
+        self.spinbox_dices["selectforeground"] = self.spinbox_dices["fg"] # because of readonly then no select highlight
+
+        self._stop_dice_rolling(only_widgets=True)
 
     def _start_dice_rolling(self):
         self.button_start["state"] = "disabled"
-        self.button_start["bg"] = self.BUTTON_DISABLED_BG
+        self.button_start["bg"] = self.DISABLED_BG
         self.spinbox_dices["state"] = "disabled"
         self.button_stop["state"] = "normal"
         self.button_stop["bg"] = self.BUTTON_STOP_BG
@@ -200,15 +200,16 @@ class DiceGui(tk.Tk):
         data_packet.start_dice_rolling(self.dice_amount_int.get())
         self.data_from_gui.put(data_packet)
 
-    def _stop_dice_rolling(self):
+    def _stop_dice_rolling(self, only_widgets=False):
         self.button_stop["state"] = "disabled"
-        self.button_stop["bg"] = self.BUTTON_DISABLED_BG
+        self.button_stop["bg"] = self.DISABLED_BG
         self.button_start["bg"] = self.BUTTON_START_BG
         self.button_start["state"] = "normal"
-        self.spinbox_dices["state"] = "normal"
-        data_packet = DataFromGui()
-        data_packet.stop_dice_rolling()
-        self.data_from_gui.put(data_packet)
+        self.spinbox_dices["state"] = "readonly"
+        if not only_widgets:
+            data_packet = DataFromGui()
+            data_packet.stop_dice_rolling()
+            self.data_from_gui.put(data_packet)
 
 
 class DiceRolling():
