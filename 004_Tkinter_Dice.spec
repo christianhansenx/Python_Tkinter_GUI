@@ -1,3 +1,5 @@
+# This file is specifications for pyinstaller (building exe)
+
 # -*- mode: python ; coding: utf-8 -*-
 
 block_cipher = None
