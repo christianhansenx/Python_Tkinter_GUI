@@ -43,8 +43,12 @@ class DiceGui(tk.Tk):
         self.data_to_gui = data_to_gui
         self.data_from_gui = data_from_gui
         tk.Tk.__init__(self)
-        self.iconbitmap(script_path + "\\" + script_name + ".ico") # https://findicons.com/icon/download/80730/dice/48/ico
         self.title("Dice Rolling Simulator")
+        try:
+            # https://findicons.com/icon/download/80730/dice/48/ico
+            self.iconbitmap(script_path + "\\" + script_name + ".ico")
+        except: # if icon file is missing then just ignore it
+            pass
         self.resizable(width=False, height=False)
 
         # set fonts (https://www.tutorialspoint.com/python/tk_fonts.htm)
