@@ -175,7 +175,6 @@ class DiceGui(tk.Tk):
         input_frame.grid(pady=(0, self.PADDING_DEFAULT))
 
         self.button_start = tk.Button(input_frame, text="Start", font=self.large_font, command=self._start_dice_rolling)
-        self.button_start = tk.Button(input_frame, text="Start", font=self.large_font, command=self._start_dice_rolling)
         self.button_start.grid()
 
         self.button_stop = tk.Button(input_frame, text="Stop", font=self.large_font, command=self._stop_dice_rolling)
