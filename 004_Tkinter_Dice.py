@@ -43,11 +43,13 @@ class DiceGui(tk.Tk):
         self.data_to_gui = data_to_gui
         self.data_from_gui = data_from_gui
         tk.Tk.__init__(self)
+        self.withdraw() # Hide GUI (hide while building the layout)
         self.title("Dice Rolling Simulator")
+
         try:
             # https://findicons.com/icon/download/80730/dice/48/ico
             self.iconbitmap(script_path + "\\" + script_name + ".ico")
-        except: # if icon file is missing then just ignore it
+        except: # if icon file is missing then just ignore
             pass
         self.resizable(width=False, height=False)
 
@@ -60,6 +62,8 @@ class DiceGui(tk.Tk):
         self._statistics_reset(0)
         self._user_input_frame()
         self._dice_rolling_update()
+        self.update() # Update GUI layout before make it visible
+        self.deiconify() # Make GUI visible
         self.mainloop()
 
     def _dice_rolling_update(self):
@@ -327,14 +331,9 @@ class DataToGui():
 
 
 if __name__ == "__main__":
-    SCRIPT_PATH_FILE = os.path.basename(sys.argv[0])
+    SCRIPT_PATH = os.path.dirname(sys.argv[0])
     SCRIPT_FILE_NAME = os.path.basename(sys.argv[0])
     SCRIPT_NAME = os.path.splitext(SCRIPT_FILE_NAME)[0]
-
-    try:
-        SCRIPT_PATH = sys._MEIPASS
-    except:
-        SCRIPT_PATH = os.path.dirname(sys.argv[0])
 
     print("=== SCRIPT: %s ====\n" % SCRIPT_NAME)
 
