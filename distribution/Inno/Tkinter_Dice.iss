@@ -8,7 +8,7 @@ AppId={{3AF5685A-2605-4DDB-96D8-5F81A9D0F1AD}
 AppName=Dice Rolling Simulator
 AppVersion=0.2
 ;AppVerName=Dice Rolling Simulator 0.2
-AppPublisher=Christian Hansen
+AppPublisher="Christian Hansen"
 DefaultDirName={autopf}\Dice Rolling Simulator
 DisableProgramGroupPage=yes
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
