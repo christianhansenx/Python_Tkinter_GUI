@@ -45,14 +45,7 @@ class DiceGui(tk.Tk):
         tk.Tk.__init__(self)
         self.withdraw() # Hide GUI (hide while building the layout)
         self.title("Dice Rolling Simulator")
-
-        print(script_name + ".ico")
-
-        try:
-            # https://findicons.com/icon/download/80730/dice/48/ico
-            self.iconbitmap(script_name + ".ico")
-        except: # if icon file is missing then just ignore
-            pass
+        self.iconbitmap(script_name + ".ico") # https://findicons.com/icon/download/80730/dice/48/ico
         self.resizable(width=False, height=False)
 
         # set fonts (https://www.tutorialspoint.com/python/tk_fonts.htm)

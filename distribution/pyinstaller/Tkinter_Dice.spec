@@ -2,11 +2,10 @@
 
 block_cipher = None
 
-
-a = Analysis(['004_Tkinter_Dice.py'],
+a = Analysis(['..\..\Tkinter_Dice.py'],
              pathex=[],
              binaries=[],
-             datas=[("004_Tkinter_Dice.ico", ".")],
+             datas=[("..\..\Tkinter_Dice.ico", ".")],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -21,13 +20,13 @@ exe = EXE(pyz,
           a.scripts,
           [],
           exclude_binaries=True,
-          name='004_Tkinter_Dice',
+          name='Tkinter_Dice',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
           console=False,
-          icon='004_Tkinter_Dice.ico')
+          icon='..\..\Tkinter_Dice.ico')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
@@ -35,4 +34,4 @@ coll = COLLECT(exe,
                strip=False,
                upx=True,
                upx_exclude=[],
-               name='004_Tkinter_Dice')
+               name='Tkinter_Dice')
