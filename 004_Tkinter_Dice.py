@@ -39,16 +39,18 @@ class DiceGui(tk.Tk):
     DISABLED_BG = "light gray"
     PADDING_DEFAULT = 8
 
-    def __init__(self, script_path, script_name, data_to_gui, data_from_gui):
+    def __init__(self, script_name, data_to_gui, data_from_gui):
         self.data_to_gui = data_to_gui
         self.data_from_gui = data_from_gui
         tk.Tk.__init__(self)
         self.withdraw() # Hide GUI (hide while building the layout)
         self.title("Dice Rolling Simulator")
 
+        print(script_name + ".ico")
+
         try:
             # https://findicons.com/icon/download/80730/dice/48/ico
-            self.iconbitmap(script_path + "\\" + script_name + ".ico")
+            self.iconbitmap(script_name + ".ico")
         except: # if icon file is missing then just ignore
             pass
         self.resizable(width=False, height=False)
@@ -331,7 +333,6 @@ class DataToGui():
 
 
 if __name__ == "__main__":
-    SCRIPT_PATH = os.path.dirname(sys.argv[0])
     SCRIPT_FILE_NAME = os.path.basename(sys.argv[0])
     SCRIPT_NAME = os.path.splitext(SCRIPT_FILE_NAME)[0]
 
@@ -340,4 +341,4 @@ if __name__ == "__main__":
     data_to_gui = queue.Queue() # Thread safe data packets transfer to gui
     data_from_gui = queue.Queue() # Thread safe data packets transfer from gui
     rolling_generator = DiceRolling(data_to_gui, data_from_gui) # Aim "dice rolling generator"
-    DiceGui(SCRIPT_PATH, SCRIPT_NAME, data_to_gui, data_from_gui) # Aim the GUI
+    DiceGui(SCRIPT_NAME, data_to_gui, data_from_gui) # Aim the GUI
