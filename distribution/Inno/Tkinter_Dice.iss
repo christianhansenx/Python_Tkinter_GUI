@@ -7,7 +7,7 @@
 AppId={{3AF5685A-2605-4DDB-96D8-5F81A9D0F1AD}
 AppName=Dice Rolling Simulator
 AppVersion=0.2
-;AppVerName=Dice Rolling Simulator 0.2
+;AppVerName=Dice Rolling Simulator
 AppPublisher="Christian Hansen"
 DefaultDirName={autopf}\Dice Rolling Simulator
 DisableProgramGroupPage=yes
