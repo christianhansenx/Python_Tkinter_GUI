@@ -1,15 +1,15 @@
-""" import module functions (Python 3.xx) """
-import tkinter as tk # import all tkinter functions
+""" Import module functions (Python 3.xx) """
+import tkinter as tk  # Import all tkinter functions
 
-""" prepare application window """
-window = tk.Tk() # create main window of application
-window.title("Tkinter Hello World") # define Window title
-width, height = "400", "50" # define window size in pixels
-window.geometry(width + "x" + height) # set window size
+""" Prepare application window """
+window = tk.Tk()  # Create main window of application
+window.title("Tkinter Hello World")  # Define Window title
+width_x_height = "400x50"  # Define window size in pixels
+window.geometry(width_x_height)  # Set window size
 
-""" prepare a GUI Label widget """
-label_welcome = tk.Label(window, text="Hello GUI World!") # define label
-label_welcome.grid() # apply label with grid method
+""" Prepare a GUI Label widget """
+label_hello = tk.Label(window, text="Hello GUI World!") # Define text label
+label_hello.grid()  # Apply label with grid method
 
-""" execute GUI application """
-window.mainloop() # launch GUI and run until user closes the window
+""" Execute GUI application """
+window.mainloop()  # Launch GUI and run until user closes the window
